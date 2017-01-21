@@ -1,0 +1,22 @@
+{
+  "name": "flask-vue-todo",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "docker-build": "docker build -t \"flask-vue-todo\" .",
+    "docker-run": "docker run --rm -it -p 5000:5000 -v $(pwd)/:/dist --name fvt-run flask-vue-todo",
+    "start": "python init.py",
+    "test": "docker run --rm -it -v $(pwd)/:/dist --name fvt-test --entrypoint /usr/local/bin/node flask-vue-todo scripts/test"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "isomorphic-fetch": "^2.2.1"
+  },
+  "devDependencies": {
+    "child-process-promise": "^2.2.0",
+    "tap": "^9.0.3",
+    "walk": "^2.3.9"
+  }
+}
