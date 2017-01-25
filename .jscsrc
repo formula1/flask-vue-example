@@ -13,7 +13,7 @@
   "disallowSpaceAfterComma": false,
 
   "requireTrailingComma": false,
-  "disallowTrailingComma": true,
+  "disallowTrailingComma": false,
 
   "disallowSpaceAfterObjectKeys": false,
   "requireSpaceAfterObjectKeys": true,

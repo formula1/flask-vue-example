@@ -1,0 +1,140 @@
+<script type="text/javascript" >
+class ScriptRunner {
+  pendingScripts = new Map()
+  run(toRun, ops){
+    return manageDuplication(toRun, ops).then(function(){
+      return wrapWithPendingQueue(waitForIdentities(ops.identities || [])
+    }).then(function(){
+      if(toRun instanceof Promise) {
+        return toRun;
+      }
+      if(typeof toRun === 'function'){
+        return toRun();
+      }
+      throw "invalid type";
+    })).catch(function(e){
+      if(e.type === "finished-run") {
+        if(e.isError) throw e.result;
+        else return e.result;
+      }
+    });
+  }
+  finishRun(rej, isError, result) {
+    var result = {
+      type: "finished-run",
+      isError: isError,
+      result: result
+    }
+    if(rej) { rej(result); }
+    else throw result;
+  }
+  manageDuplication(identity, ops){
+    if(ops.unique_identity){
+      return Promise.resolve(Date.now().toString(32));
+    }
+    var pendingScripts = this.pendingScripts;
+    var _this = this;
+    return new Promise(function(res, rej){
+      if(ops.error_double) {
+        if(pendingScripts.has(identity)) {
+          return _this.finishRun(void 0, true, "already running");
+        }
+      }
+      if(ops.join_double) {
+        if(pendingScripts.has(identity)) {
+          var waitingP = pendingScripts.has(identity);
+          return waitingP.push([
+            _this.finishRun.bind(_this, false),
+            _this.finishRun.bind(_this, true)
+          ]);
+        }
+      }
+      if(ops.queue_double) {
+        if(pendingScripts.has(identity)) {
+          var waitingP = pendingScripts.has(identity);
+          return waitingP.push([res, rej]);
+        }
+      }
+      if(ops.cancel_previous) {
+        if(pendingScripts.has(identity)) {
+          var waitingP = pendingScripts.get(identity);
+          waitingP.cancel();
+        }
+      }else{
+        if(pendingScripts.has(identity)) {
+          return _this.finishRun(void 0, true, "already running");
+        }
+      }
+      res(identity);
+    });
+  }
+  wrapWithPendingQueue(identity, p){
+    var pendingScripts = this.pendingScripts;
+    return new Promise(function(res, rej){
+      var listeners = [];
+      pendingScripts.set(identity, {
+        push: function(resrej){
+          listeners.push(resrej);
+        },
+        cancel: function(){
+          rej("canceled");
+        }
+      });
+      p.then(res, rej);
+    }).then(function(result){
+      pendingScripts.delete(identity);
+      listeners.forEach(function(l){
+        l[0](result);
+      });
+      return result;
+    }, function(result){
+      pendingScripts.delete(identity);
+      listeners.forEach(function(l){
+        l[1](result);
+      });
+      throw result;
+    })
+  }
+  waitForIdentities(identities) {
+    var pendingScripts = this.pendingScripts;
+    return new Promise(function(res, rej){
+      if(identities.length === 0) return res();
+      var currentlyWatching = new Map();
+      var resolved = false;
+      function checkIdentities(resolvedIdentity){
+        if(resolved) return;
+        if(resolvedIdentity) currentlyWatching.delete(resolvedIdentity);
+        var stillPending = indentities.filter(function(indentity){
+          return pendingScripts.has(indentity);
+        });
+        if(stillPending.length === 0) {
+          resolved = true;
+          return res();
+        }
+        stillPending.filter(function(indentity){
+          currentlyWatching.has(indentity);
+        }).forEach(function(identity) {
+          var watch = [
+            checkIdentities.bind(void 0, identity),
+            failAllIdentities,
+          ];
+          pendingScripts.get(identity).push(watch);
+          currentlyWatching.set(identity, watch);
+        });
+      }
+      function failAllIdentities(error){
+        if(resolved) return;
+        resolved = true;
+        Array.from(currentlyWatching.keys()).forEach(function(key){
+          if(!pendingScripts.has(key)) return;
+          var watchers = currentlyWatching.get(key);
+          var list = pendingScripts.get(key);
+          list.splice(list.indexOf(watchers), 1);
+        });
+        rej(error);
+      }
+      checkIdentities();
+    })
+  }
+}
+</script>

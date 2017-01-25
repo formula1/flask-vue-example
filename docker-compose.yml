@@ -1,0 +1,13 @@
+version: '2'
+services:
+  web:
+    build: .
+    ports:
+     - "5000:5000"
+    volumes:
+     - .:/dist
+  postgres:
+    image: "postgres"
+    environment:
+     - POSTGRES_DB=flask_vue
+     - POSTGRES_USER=flask_vue

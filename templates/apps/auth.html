@@ -1,0 +1,40 @@
+{% extends "/themed.html" %}
+{% block site_title %}Login{% endblock %}
+{% block content %}
+{% raw %}
+<h1>Please log or register</h1>
+<div id="authentication">
+  <form action="/logn" method="POST" v-on:submit.prevent="onSubmit">
+    <ul>
+      <li v-for="error in errors" >
+        <error-message>{{error}}</error-message>
+      </li>
+    </ul>
+    <div>Name: <input
+      type="text"
+      v-model="username"
+      name="username"
+      v-on:change="onUserName"
+    /></div>
+    <div>Password: <input
+      type="password"
+      v-model="password"
+      name="password"
+      v-on:change="onPassword"
+    /></div>
+    <input type='hidden' value='false' name='register'>
+    <div>New User?: <input
+      type="checkbox"
+      v-model="register"
+      name="register"
+      value="true"
+    /></div>
+    <button type="submt">Login</button>
+  </form>
+</div>
+{% endraw %}
+{% endblock %}
+{% block footer_scripts %}
+  <script src="/static/error-directive.js"></script>
+  <script src="/static/auth.js"></script>
+{% endblock %}

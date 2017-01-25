@@ -1,12 +1,15 @@
 {
-  "env": {
-      "node": true
-  },
+  "env": {},
   "extends": [
     "eslint:recommended"
   ],
   "globals": {
-    "Promise": true
+    "Promise": true,
+    "android": true,
+    "require": true,
+    "global": true,
+    "module":true,
+    "exports": true
   },
   "parserOptions": {
     "ecmaVersion": 6,

@@ -1,0 +1,12 @@
+{% extends "index.html" %}
+{% block body %}
+  <div class="header">
+    {% include "template/header.html" %}
+  </div>
+  <div class="content">
+    {% block content %}{% endblock %}
+  </div>
+  <div class="footer">
+    {% include "template/footer.html" %}
+  </div>
+{% endblock %}
